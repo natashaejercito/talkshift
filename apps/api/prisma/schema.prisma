@@ -7,9 +7,45 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  STAFF
+  STORE_MANAGER
+  ASSISTANT_STORE_MANAGER
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+}
+
 model Staff {
+  id                String         @id @default(cuid())
+  name              String
+  email             String         @unique
+  role              Role           @default(STAFF)
+  employmentType    EmploymentType @default(PART_TIME)
+  targetDaysPerWeek Int?
+  active            Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  loginTokens       LoginToken[]
+  sessions          Session[]
+}
+
+model LoginToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  staff     Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staffId   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Session {
   id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
+  tokenHash String   @unique
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staffId   String
+  expiresAt DateTime
   createdAt DateTime @default(now())
 }
