@@ -29,16 +29,18 @@ authRouter.post('/request-link', linkLimiter, async (req, res) => {
       },
     })
     // Dev only: print the link. Swapped for a real email later (Resend).
-    console.log(`\nSign-in link for ${email}:\n${process.env.WEB_URL}/api/auth/verify?token=${token}\n`)
+    console.log(`\nSign-in link for ${email}:\n${process.env.WEB_URL}/login/verify?token=${token}\n`)
   }
 
   // Same answer either way, so nobody can probe which emails are staff.
   res.json({ message: 'If that email is on the staff list, a sign-in link is on its way.' })
 })
 
-authRouter.get('/verify', async (req, res) => {
-  const token = typeof req.query.token === 'string' ? req.query.token : ''
-  const failUrl = `${process.env.WEB_URL}/login?error=expired`
+authRouter.post('/verify', async (req, res) => {
+  const parsed = z.object({ token: z.string().min(1) }).safeParse(req.body)
+  const token = parsed.success ? parsed.data.token : ''
+  const expired = () =>
+    res.status(400).json({ error: 'This sign-in link has expired or was already used.' })
 
   const record = token
     ? await prisma.loginToken.findUnique({
@@ -48,9 +50,37 @@ authRouter.get('/verify', async (req, res) => {
     : null
 
   if (!record || record.usedAt || record.expiresAt < new Date() || !record.staff.active) {
-    res.redirect(failUrl)
+    expired()
     return
   }
+
+  const { count } = await prisma.loginToken.updateMany({
+    where: { id: record.id, usedAt: null },
+    data: { usedAt: new Date() },
+  })
+  if (count === 0) {
+    expired()
+    return
+  }
+
+  const sessionToken = newToken()
+  await prisma.session.create({
+    data: {
+      tokenHash: hashToken(sessionToken),
+      staffId: record.staffId,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    },
+  })
+
+  res.cookie(SESSION_COOKIE, sessionToken, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: SESSION_TTL_MS,
+    path: '/',
+  })
+  res.json({ ok: true })
+})
 
   // Mark the link used; count is 0 if someone else used it a moment ago.
   const { count } = await prisma.loginToken.updateMany({
