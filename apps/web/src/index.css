@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@theme {
+  --color-paper: #F4F1EA;
+  --color-ink: #1B1D1F;
+  --color-muted: #5B5F63;
+  --color-line: #E2DDD2;
+  --color-brand: #1F6F66;
+  --color-brand-dark: #164F49;
+  --color-brand-tint: #E3F0EE;
+  --color-open: #B4420E;
+  --color-covered: #2A55A8;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}

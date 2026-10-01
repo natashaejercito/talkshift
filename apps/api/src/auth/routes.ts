@@ -82,35 +82,6 @@ authRouter.post('/verify', async (req, res) => {
   res.json({ ok: true })
 })
 
-  // Mark the link used; count is 0 if someone else used it a moment ago.
-  const { count } = await prisma.loginToken.updateMany({
-    where: { id: record.id, usedAt: null },
-    data: { usedAt: new Date() },
-  })
-  if (count === 0) {
-    res.redirect(failUrl)
-    return
-  }
-
-  const sessionToken = newToken()
-  await prisma.session.create({
-    data: {
-      tokenHash: hashToken(sessionToken),
-      staffId: record.staffId,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
-    },
-  })
-
-  res.cookie(SESSION_COOKIE, sessionToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: SESSION_TTL_MS,
-    path: '/',
-  })
-  res.redirect(process.env.WEB_URL!)
-})
-
 authRouter.post('/logout', async (req, res) => {
   const token = req.cookies?.[SESSION_COOKIE]
   if (token) {
