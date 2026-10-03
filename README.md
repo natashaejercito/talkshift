@@ -1,4 +1,4 @@
-# talkshift
+# Talkshift
 
 Work shift management application.
 
