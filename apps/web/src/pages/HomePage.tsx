@@ -1,18 +1,10 @@
-import { useNavigate } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
-import { api } from '../lib/api'
 import { useMe, isManager } from '../auth/useMe'
+import { useAuth0 } from '@auth0/auth0-react'
 
 export function HomePage() {
   const { data: me } = useMe()
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
-
-  const logout = async () => {
-    await api('/auth/logout', { method: 'POST' })
-    queryClient.setQueryData(['me'], null)
-    navigate('/login', { replace: true })
-  }
+  const { logout } = useAuth0()
+  const signOut = () => logout({ logoutParams: { returnTo: `${window.location.origin}/login` } })
 
   if (!me) return null
   return (
@@ -23,7 +15,7 @@ export function HomePage() {
       </p>
       <button
         type="button"
-        onClick={logout}
+        onClick={signOut}
         className="min-h-11 self-start rounded-xl border border-line bg-white px-4 font-semibold"
       >
         Sign out

@@ -27,25 +27,7 @@ model Staff {
   targetDaysPerWeek Int?
   active            Boolean        @default(true)
   createdAt         DateTime       @default(now())
-  loginTokens       LoginToken[]
-  sessions          Session[]
+  auth0Id           String?        @unique
 }
 
-model LoginToken {
-  id        String    @id @default(cuid())
-  tokenHash String    @unique
-  staff     Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  staffId   String
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-}
 
-model Session {
-  id        String   @id @default(cuid())
-  tokenHash String   @unique
-  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  staffId   String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
