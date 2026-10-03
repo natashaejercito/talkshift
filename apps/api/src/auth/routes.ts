@@ -21,7 +21,7 @@ authRouter.post('/request-link', linkLimiter, async (req, res) => {
 
   if (staff?.active) {
     const token = newToken()
-    await prisma.loginToken.create({
+    await prisma.loginToken.create({ 
       data: {
         tokenHash: hashToken(token),
         staffId: staff.id,
