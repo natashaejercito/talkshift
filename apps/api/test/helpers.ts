@@ -16,3 +16,14 @@ export function createStaff(overrides: { role?: Role; active?: boolean; email?: 
     data: { name: `Test Staff ${n}`, email: `staff${n}@example.com`, ...overrides },
   })
 }
+
+const NS = 'https://talkshift.app'
+
+// A fake Auth0 token for this staff member.
+export function tokenFor(staff: { id: string; email: string }, verified = true) {
+  return bearer({
+    sub: `auth0|${staff.id}`,
+    [`${NS}/email`]: staff.email,
+    [`${NS}/email_verified`]: verified,
+  })
+}

@@ -2,11 +2,13 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { requireAuth, requireRole } from './auth/middleware.js'
 import express, { type ErrorRequestHandler } from 'express'
+import { staffRouter } from './staff/routes.js'
 
 export const app = express()
 app.use(helmet())
 app.use(cors({ origin: 'http://localhost:5173' }))
 app.use(express.json())
+
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true })
@@ -21,6 +23,7 @@ app.get('/api/manager/ping', ...requireAuth, requireRole('STORE_MANAGER', 'ASSIS
   res.json({ ok: true })
 })
 
+app.use('/api/staff', staffRouter)
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   const status = typeof err.status === 'number' ? err.status : 500
