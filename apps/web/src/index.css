@@ -1,18 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #F4F1EA;
-  --color-ink: #1B1D1F;
-  --color-muted: #5B5F63;
-  --color-line: #E2DDD2;
-  --color-brand: #1F6F66;
-  --color-brand-dark: #164F49;
-  --color-brand-tint: #E3F0EE;
-  --color-open: #B4420E;
-  --color-covered: #2A55A8;
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --color-paper: #FBF7FA;       /* page background */
+  --color-surface: #FFFFFF;     /* cards */
+  --color-wash: #F1E6EE;        /* subtle fills, hover */
+  --color-line: #E3D6E0;        /* borders */
+  --color-ink: #1B1F3B;         /* main text */
+  --color-muted: #5A5F7A;       /* secondary text */
+
+  --color-brand: #2446A8;       /* primary buttons, links, active tab */
+  --color-brand-dark: #16307A;
+  --color-brand-tint: #E4ECFF;
+
+  --color-alert: #C62F6B;       /* can't make it, open shifts */
+  --color-alert-dark: #8E1D4A;
+  --color-alert-tint: #FDE7EF;
+
+  --color-pending: #7A4B00;     /* pending requests */
+  --color-pending-tint: #FFF1D6;
+
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "DM Sans", sans-serif;
+
+  --radius-card: 14px;
 }
 
 body {
