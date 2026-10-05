@@ -44,7 +44,10 @@ export function RequireAuth() {
       </main>
     )
   }
-  if (me.error) return <p className="p-6 text-open">Couldn't load your account. Refresh to try again.</p>
+  if (me.error) {
+  const status = me.error instanceof ApiError ? ` (${me.error.status})` : ''
+  return <p className="p-6 text-alert">Couldn't load your account{status}: {me.error.message}</p>
+}
 
   return <Outlet />
 }
