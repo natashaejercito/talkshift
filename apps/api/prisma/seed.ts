@@ -1,3 +1,4 @@
+import { DEFAULT_STORE_HOURS } from '../src/availability/storeHours.js'
 import 'dotenv/config'
 import { prisma } from '../src/db.js'
 
@@ -16,4 +17,6 @@ await prisma.staff.upsert({
   },
 })
 console.log(`Manager account ready: ${email}`)
+await prisma.storeHours.createMany({ data: DEFAULT_STORE_HOURS, skipDuplicates: true })
+console.log('Store hours ready')
 await prisma.$disconnect()

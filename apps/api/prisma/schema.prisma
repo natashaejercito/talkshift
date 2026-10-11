@@ -28,6 +28,57 @@ model Staff {
   active            Boolean        @default(true)
   createdAt         DateTime       @default(now())
   auth0Id           String?        @unique
+  availability        AvailabilityRule[]
+  availabilityChanges AvailabilityChange[] @relation("ChangeStaff")
+  decidedChanges      AvailabilityChange[] @relation("ChangeDecider")
 }
 
+enum AvailabilityStatus {
+  ALL_DAY
+  WINDOW
+  UNAVAILABLE
+}
 
+enum ChangeStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+// One row per weekday. 0 = Monday … 6 = Sunday. Times are minutes since midnight.
+model StoreHours {
+  weekday  Int @id
+  openMin  Int
+  closeMin Int
+}
+
+// A staff member's approved, repeating weekly pattern: one row per weekday.
+model AvailabilityRule {
+  id       String             @id @default(cuid())
+  staff    Staff              @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staffId  String
+  weekday  Int
+  status   AvailabilityStatus
+  startMin Int?
+  endMin   Int?
+
+  @@unique([staffId, weekday])
+}
+
+// A proposed new pattern waiting for (or decided by) a manager.
+model AvailabilityChange {
+  id          String       @id @default(cuid())
+  staff       Staff        @relation("ChangeStaff", fields: [staffId], references: [id], onDelete: Cascade)
+  staffId     String
+  days        Json         // 7 entries, Monday first
+  note        String?
+  status      ChangeStatus @default(PENDING)
+  managerNote String?
+  decidedBy   Staff?       @relation("ChangeDecider", fields: [decidedById], references: [id])
+  decidedById String?
+  decidedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([staffId, status])
+}
