@@ -3,6 +3,7 @@ import helmet from 'helmet'
 import { requireAuth, requireRole } from './auth/middleware.js'
 import express, { type ErrorRequestHandler } from 'express'
 import { staffRouter } from './staff/routes.js'
+import { availabilityRouter } from './availability/routes.js'
 
 export const app = express()
 app.use(helmet())
@@ -24,6 +25,7 @@ app.get('/api/manager/ping', ...requireAuth, requireRole('STORE_MANAGER', 'ASSIS
 })
 
 app.use('/api/staff', staffRouter)
+app.use('/api/availability', availabilityRouter)
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   const status = typeof err.status === 'number' ? err.status : 500
