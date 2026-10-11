@@ -112,7 +112,8 @@ availabilityRouter.post('/changes/:id/decision', managerOnly, async (req, res) =
     res.status(400).json({ error: 'Choose approve or decline.' })
     return
   }
-  const change = await prisma.availabilityChange.findUnique({ where: { id: req.params.id } })
+  const change = await prisma.availabilityChange.findUnique({ where: { id: req.params.id as string } })
+
   if (!change) {
     res.status(404).json({ error: 'Request not found.' })
     return
