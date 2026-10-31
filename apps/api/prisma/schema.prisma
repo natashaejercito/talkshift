@@ -29,6 +29,19 @@ enum NotificationStatus{
   FAILED
 }
 
+enum CoverStatus{
+  OPEN
+  COVERED
+  CANCELLED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
 model Staff {
   id                String         @id @default(cuid())
   name              String
@@ -48,6 +61,10 @@ model Staff {
   invitedAt     DateTime?
   firstSignInAt DateTime?
   notifications Notification[]
+  coverRequests CoverRequest[] @relation("CoverRequester")
+  coversTaken   CoverRequest[] @relation("CoverTaker")
+  pickupOffers  PickupOffer[]  @relation("PickupStaff")
+  auditEntries  AuditLog[]     @relation("AuditActor")
 }
 
 enum AvailabilityStatus {
@@ -152,6 +169,7 @@ model Shift {
   note      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  coverRequests CoverRequest[]
 
   @@unique([staffId, date]) // one shift per person per day
   @@index([weekId])
@@ -176,4 +194,50 @@ model Notification {
   createdAt   DateTime           @default(now())
 
   @@index([status, sendAfter])
+}
+
+// "I can't make this shift." The shift stays theirs until someone is confirmed.
+model CoverRequest {
+  id          String         @id @default(cuid())
+  shift       Shift          @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId     String
+  requester   Staff          @relation("CoverRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  reason      String?
+  status      CoverStatus    @default(OPEN)
+  coveredBy   Staff?         @relation("CoverTaker", fields: [coveredById], references: [id])
+  coveredById String?
+  closedAt    DateTime?
+  createdAt   DateTime       @default(now())
+  offers      PickupOffer[]
+
+  @@index([status])
+}
+
+// "I can take it."
+model PickupOffer {
+  id             String       @id @default(cuid())
+  coverRequest   CoverRequest @relation(fields: [coverRequestId], references: [id], onDelete: Cascade)
+  coverRequestId String
+  staff          Staff        @relation("PickupStaff", fields: [staffId], references: [id], onDelete: Cascade)
+  staffId        String
+  status         OfferStatus  @default(PENDING)
+  createdAt      DateTime     @default(now())
+
+  @@unique([coverRequestId, staffId])
+}
+
+// Who changed what, and when.
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     Staff?   @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorId   String?
+  action    String   // e.g. cover.requested, cover.assigned
+  entity    String   // e.g. CoverRequest
+  entityId  String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
 }

@@ -13,6 +13,7 @@ export type StaffMember = {
   targetDaysPerWeek: number | null
   active: boolean
   hasSignedIn: boolean
+  invitedAt: string | null
 }
 
 type SaveInput = Partial<Omit<StaffMember, 'id' | 'hasSignedIn'>> & { id?: string }
@@ -26,10 +27,21 @@ export function useSaveStaff() {
   const callApi = useApi()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...input }: SaveInput) =>
+    mutationFn: ({ id, ...input }: SaveInput): Promise<StaffMember & { invite?: InviteResult }> =>
       id
         ? callApi<StaffMember>(`/staff/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
-        : callApi<StaffMember>('/staff', { method: 'POST', body: JSON.stringify(input) }),
+        : callApi<StaffMember & { invite?: InviteResult }>('/staff', { method: 'POST', body: JSON.stringify(input) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] }),
+  })
+}
+
+export type InviteResult = { status: 'sent' | 'skipped' | 'failed'; message: string }
+
+export function useResendInvite() {
+  const callApi = useApi()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => callApi<InviteResult>(`/staff/${id}/invite`, { method: 'POST' }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] }),
   })
 }

@@ -6,6 +6,7 @@ import type { Shift, TimeOffRequest } from '../generated/prisma/client.js'
 import { isIsoDate, toDbDate, fromDbDate, addDays, weekdayOf, weekStartOf, storeNow } from '../requests/dates.js'
 import { rulesToDays, type Day } from '../availability/days.js'
 import { queueScheduleEmails } from '../email/notify.js'
+import { audit } from '../audit/log.js'
 
 const managerOnly = requireRole('STORE_MANAGER', 'ASSISTANT_STORE_MANAGER')
 
@@ -20,7 +21,7 @@ const toPublished = (s: Shift): PublishedShift => ({
   endMin: s.endMin,
   note: s.note,
 })
-const readSnapshot = (json: unknown) => (json ?? []) as PublishedShift[]
+export const readSnapshot = (json: unknown) => (json ?? []) as PublishedShift[]
 
 // Staff whose shifts differ between two versions of a week.
 export function diffByStaff(before: PublishedShift[], after: PublishedShift[]) {
@@ -37,7 +38,7 @@ export function diffByStaff(before: PublishedShift[], after: PublishedShift[]) {
 }
 
 // Approved requests override the weekly pattern for that date.
-function effectiveFor(rule: Day | null, request: TimeOffRequest | null): Effective {
+export function effectiveFor(rule: Day | null, request: TimeOffRequest | null): Effective {
   if (request?.status === 'APPROVED') {
     if (request.kind === 'TIME_OFF') return { status: 'TIME_OFF' }
     return { status: 'WINDOW', start: request.startMin!, end: request.endMin! }
@@ -45,7 +46,7 @@ function effectiveFor(rule: Day | null, request: TimeOffRequest | null): Effecti
   return rule
 }
 
-function warningFor(s: { startMin: number; endMin: number }, e: Effective): Warning | null {
+export function warningFor(s: { startMin: number; endMin: number }, e: Effective): Warning | null {
   if (!e) return null
   if (e.status === 'TIME_OFF') return 'TIME_OFF'
   if (e.status === 'UNAVAILABLE') return 'UNAVAILABLE'
@@ -219,6 +220,7 @@ scheduleRouter.post('/weeks/:start/publish', managerOnly, async (req, res) => {
     where: { id: week.id },
     data: { published: snapshot, publishedAt: new Date(), version: { increment: 1 } },
   })
+  await audit(prisma, req.staff!.id, 'schedule.published', 'Week', week.id, { version: updated.version, changedStaffIds })
   const emailed = await queueScheduleEmails({
     weekStart: start!,
     version: updated.version,

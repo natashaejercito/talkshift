@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useWeekGrid, usePublishWeek, hoursOf, type GridDay, type WeekGrid } from '../../features/schedule/useSchedule'
-import { ShiftEditor } from '../../features/schedule/ShiftEditor'
+import { ShiftEditor } from '../../features/schedule/ShiftEditor.tsx'
 import { formatTime } from '../../features/availability/useAvailability'
 import { addDays, weekStartOf, todayLocal, formatDate, formatWeek, formatHours } from '../../lib/dates'
 

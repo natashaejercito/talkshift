@@ -108,3 +108,26 @@ export function inviteEmail(o: { name: string; storeName: string; link: string; 
   const text = `Hi ${first},\n\nYour manager added you to TalkShift at ${o.storeName}.\nSet your password (link works for 7 days):\n${o.link}\n\nThen sign in at ${o.appUrl}`
   return { subject, html, text }
 }
+export const shiftLabel = (s: { date: string; startMin: number; endMin: number }) =>
+  `${fmtDate(s.date)}, ${formatTime(s.startMin)} – ${formatTime(s.endMin)}`
+
+// A short email: a bold line, a few sentences and one button.
+export function noticeEmail(o: {
+  name: string
+  storeName: string
+  heading: string
+  lines: string[]
+  link: string
+  linkLabel: string
+}) {
+  const first = o.name.split(' ')[0]
+  const html = layout(
+    o.storeName,
+    `<h1 style="margin:0 0 8px;font-size:22px">Hi ${esc(first)},</h1>
+<p style="margin:0 0 8px;font-weight:700">${esc(o.heading)}</p>
+${o.lines.map((l) => `<p style="margin:0 0 8px">${esc(l)}</p>`).join('')}
+<p style="margin:20px 0 0">${button(o.link, o.linkLabel)}</p>`,
+  )
+  const text = [`Hi ${first},`, '', o.heading, ...o.lines, '', `${o.linkLabel}: ${o.link}`].join('\n')
+  return { html, text }
+}

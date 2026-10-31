@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useSaveStaff, type StaffMember } from './useStaff'
 import { useMe } from '../../auth/useMe'
+import { useSaveStaff, useResendInvite, type StaffMember } from './useStaff'
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Enter a name'),
@@ -16,8 +16,9 @@ type FormValues = z.infer<typeof schema>
 const input = 'min-h-11 w-full rounded-[10px] border border-line bg-surface px-3'
 const label = 'text-sm font-bold'
 
-export function StaffForm({ member, onDone }: { member?: StaffMember; onDone: () => void }) {
+export function StaffForm({ member, onDone }: { member?: StaffMember; onDone: (notice?: string) => void }) {
   const save = useSaveStaff()
+  const resend = useResendInvite()
   const { data: me } = useMe()
   const isSelf = member?.id === me?.id
 
@@ -43,11 +44,11 @@ export function StaffForm({ member, onDone }: { member?: StaffMember; onDone: ()
         employmentType: v.employmentType,
         targetDaysPerWeek: v.employmentType === 'FULL_TIME' ? Number(v.targetDays) : null,
       },
-      { onSuccess: onDone },
+      { onSuccess: (saved) => onDone(saved.invite?.message) },
     )
 
   const setActive = (active: boolean) => {
-    if (member) save.mutate({ id: member.id, active }, { onSuccess: onDone })
+    if (member) save.mutate({ id: member.id, active }, { onSuccess: () => onDone() })
   }
 
   return (
@@ -111,11 +112,25 @@ export function StaffForm({ member, onDone }: { member?: StaffMember; onDone: ()
           >
             {save.isPending ? 'Saving…' : member ? 'Save changes' : 'Add to staff'}
           </button>
-          <button type="button" onClick={onDone} className="min-h-11 rounded-[10px] border border-line px-4 font-medium">
+          <button type="button" onClick={() => onDone()}className="min-h-11 rounded-[10px] border border-line px-4 font-medium">
             Cancel
           </button>
         </div>
 
+        {member && member.active && !member.hasSignedIn && (
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              disabled={resend.isPending}
+              onClick={() => resend.mutate(member.id, { onSuccess: (r) => onDone(r.message) })}
+              className="min-h-11 self-start text-sm font-bold text-brand"
+            >
+              {resend.isPending ? 'Sending…' : member.invitedAt ? 'Resend invite' : 'Send invite'}
+            </button>
+            {resend.error && <p className="text-sm text-alert">{resend.error.message}</p>}
+          </div>
+        )}
+        
         {member && !isSelf && (
           <button
             type="button"

@@ -14,13 +14,15 @@ function typeLabel(s: StaffMember) {
 
 function Status({ s }: { s: StaffMember }) {
   if (!s.active) return <span className="rounded-full bg-wash px-2.5 py-0.5 text-xs font-bold text-muted">Inactive</span>
-  if (!s.hasSignedIn) return <span className="rounded-full bg-pending-tint px-2.5 py-0.5 text-xs font-bold text-pending">Not signed in yet</span>
-  return <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-bold text-brand">Active</span>
+  if (s.hasSignedIn) return <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-bold text-brand">Active</span>
+  if (s.invitedAt) return <span className="rounded-full bg-pending-tint px-2.5 py-0.5 text-xs font-bold text-pending">Invited</span>
+  return <span className="rounded-full bg-alert-tint px-2.5 py-0.5 text-xs font-bold text-alert-dark">Not invited</span>
 }
 
 export function StaffPage() {
   const { data: staff, isLoading, error } = useStaffList()
   const [editing, setEditing] = useState<StaffMember | 'new' | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   if (isLoading) return <p className="text-muted">Loading staff…</p>
   if (error) return <p className="text-alert">Couldn't load staff: {error.message}</p>
@@ -34,6 +36,7 @@ export function StaffPage() {
           <div>
             <h1 className="font-display text-3xl font-extrabold">Staff</h1>
             <p className="text-sm text-muted">{activeCount} active</p>
+            {notice && <p className="mt-1 text-sm font-bold text-brand">{notice}</p>}
           </div>
           <button
             type="button"
@@ -85,7 +88,10 @@ export function StaffPage() {
         <StaffForm
           key={editing === 'new' ? 'new' : editing.id}
           member={editing === 'new' ? undefined : editing}
-          onDone={() => setEditing(null)}
+            onDone={(message) => {
+            setEditing(null)
+            setNotice(message ?? null)
+          }}
         />
       )}
     </div>
