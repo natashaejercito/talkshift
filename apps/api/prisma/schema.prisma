@@ -18,6 +18,11 @@ enum EmploymentType {
   PART_TIME
 }
 
+enum RequestKind{
+  TIME_OFF
+  PARTIAL_DAY
+}
+
 model Staff {
   id                String         @id @default(cuid())
   name              String
@@ -31,6 +36,8 @@ model Staff {
   availability        AvailabilityRule[]
   availabilityChanges AvailabilityChange[] @relation("ChangeStaff")
   decidedChanges      AvailabilityChange[] @relation("ChangeDecider")
+  timeOffRequests TimeOffRequest[] @relation("RequestStaff")
+  decidedRequests TimeOffRequest[] @relation("RequestDecider")
 }
 
 enum AvailabilityStatus {
@@ -75,6 +82,36 @@ model AvailabilityChange {
   status      ChangeStatus @default(PENDING)
   managerNote String?
   decidedBy   Staff?       @relation("ChangeDecider", fields: [decidedById], references: [id])
+  decidedById String?
+  decidedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([staffId, status])
+}
+
+// A single row (id = 1) holding store-wide scheduling settings.
+model StoreSettings {
+  id            Int    @id @default(1)
+  timeZone      String // e.g. "America/Toronto"
+  cutoffWeekday Int    // 0 = Monday … 6 = Sunday, in the week before the schedule week
+  cutoffMin     Int    // minutes since midnight: 1080 = 6 PM
+}
+
+model TimeOffRequest {
+  id          String       @id @default(cuid())
+  staff       Staff        @relation("RequestStaff", fields: [staffId], references: [id], onDelete: Cascade)
+  staffId     String
+  kind        RequestKind
+  startDate   DateTime     @db.Date
+  endDate     DateTime     @db.Date // same as startDate for a partial day
+  startMin    Int?         // partial day: available from…
+  endMin      Int?         // …until
+  note        String?
+  late        Boolean      @default(false)
+  status      ChangeStatus @default(PENDING)
+  managerNote String?
+  decidedBy   Staff?       @relation("RequestDecider", fields: [decidedById], references: [id])
   decidedById String?
   decidedAt   DateTime?
   createdAt   DateTime     @default(now())

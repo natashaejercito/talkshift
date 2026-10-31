@@ -1,6 +1,7 @@
 import { DEFAULT_STORE_HOURS } from '../src/availability/storeHours.js'
 import 'dotenv/config'
 import { prisma } from '../src/db.js'
+import { defaultStoreSettings } from '../src/requests/settings.js'
 
 const email = process.env.MANAGER_EMAIL?.toLowerCase().trim()
 if (!email) throw new Error('Set MANAGER_EMAIL in apps/api/.env')
@@ -19,4 +20,6 @@ await prisma.staff.upsert({
 console.log(`Manager account ready: ${email}`)
 await prisma.storeHours.createMany({ data: DEFAULT_STORE_HOURS, skipDuplicates: true })
 console.log('Store hours ready')
+await prisma.storeSettings.upsert({ where: { id: 1 }, update: {}, create: defaultStoreSettings() })
+console.log('Store settings ready')
 await prisma.$disconnect()
