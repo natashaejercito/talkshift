@@ -1,7 +1,7 @@
 import { DEFAULT_STORE_HOURS } from '../src/availability/storeHours.js'
 import 'dotenv/config'
 import { prisma } from '../src/db.js'
-import { defaultStoreSettings } from '../src/requests/settings.js'
+import { defaultStoreSettings } from '../src/requests/settings.ts'
 
 const email = process.env.MANAGER_EMAIL?.toLowerCase().trim()
 if (!email) throw new Error('Set MANAGER_EMAIL in apps/api/.env')
