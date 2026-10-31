@@ -51,7 +51,9 @@ async function loadStaff(req: Request, res: Response, next: NextFunction) {
     res.status(403).json({ error: 'not_on_staff_list' })
     return
   }
-
+  if (!staff.firstSignInAt) {
+    staff = await prisma.staff.update({ where: { id: staff.id }, data: { firstSignInAt: new Date() } })
+  }
   req.staff = staff
   next()
 }

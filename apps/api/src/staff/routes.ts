@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../db.js'
 import { requireAuth, requireRole } from '../auth/middleware.js'
 import type { Staff } from '../generated/prisma/client.js'
+import { inviteStaff } from './invite.js'
 
 const roles = ['STAFF', 'ASSISTANT_STORE_MANAGER', 'STORE_MANAGER'] as const
 const employmentTypes = ['FULL_TIME', 'PART_TIME'] as const
@@ -31,7 +32,8 @@ function toJson(s: Staff) {
     employmentType: s.employmentType,
     targetDaysPerWeek: s.targetDaysPerWeek,
     active: s.active,
-    hasSignedIn: s.auth0Id !== null,
+    hasSignedIn: s.firstSignInAt !== null,
+    invitedAt: s.invitedAt,
   }
 }
 
@@ -62,8 +64,10 @@ staffRouter.post('/', async (req, res) => {
     return
   }
 
-  const staff = await prisma.staff.create({ data: { ...data, targetDaysPerWeek: target } })
-  res.status(201).json(toJson(staff))
+  const created = await prisma.staff.create({ data: { ...data, targetDaysPerWeek: target } })
+  const invite = await inviteStaff(created.id)
+  const staff = await prisma.staff.findUniqueOrThrow({ where: { id: created.id } })
+  res.status(201).json({ ...toJson(staff), invite })
 })
 
 staffRouter.patch('/:id', async (req, res) => {
@@ -107,4 +111,8 @@ staffRouter.patch('/:id', async (req, res) => {
     data: { ...changes, targetDaysPerWeek: target, ...(active !== undefined && { active }) },
   })
   res.json(toJson(staff))
+})
+staffRouter.post('/:id/invite', async (req, res) => {
+  const result = await inviteStaff(String(req.params.id))
+  res.status(result.status === 'failed' ? 502 : 200).json(result)
 })

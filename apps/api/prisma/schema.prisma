@@ -23,6 +23,12 @@ enum RequestKind{
   PARTIAL_DAY
 }
 
+enum NotificationStatus{
+  QUEUED
+  SENT
+  FAILED
+}
+
 model Staff {
   id                String         @id @default(cuid())
   name              String
@@ -39,6 +45,9 @@ model Staff {
   timeOffRequests TimeOffRequest[] @relation("RequestStaff")
   decidedRequests TimeOffRequest[] @relation("RequestDecider")
   shifts Shift[]
+  invitedAt     DateTime?
+  firstSignInAt DateTime?
+  notifications Notification[]
 }
 
 enum AvailabilityStatus {
@@ -146,4 +155,25 @@ model Shift {
 
   @@unique([staffId, date]) // one shift per person per day
   @@index([weekId])
+}
+
+// Every email TalkShift sends, rendered when it's queued.
+model Notification {
+  id          String             @id @default(cuid())
+  staff       Staff?             @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  staffId     String?
+  toEmail     String
+  template    String             // invite | schedule_published | schedule_updated
+  subject     String
+  html        String
+  text        String
+  attachments Json?              // [{ filename, contentType, content (base64) }]
+  status      NotificationStatus @default(QUEUED)
+  attempts    Int                @default(0)
+  lastError   String?
+  sendAfter   DateTime           @default(now())
+  sentAt      DateTime?
+  createdAt   DateTime           @default(now())
+
+  @@index([status, sendAfter])
 }

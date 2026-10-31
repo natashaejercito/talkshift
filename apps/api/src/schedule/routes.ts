@@ -5,6 +5,7 @@ import { requireAuth, requireRole } from '../auth/middleware.js'
 import type { Shift, TimeOffRequest } from '../generated/prisma/client.js'
 import { isIsoDate, toDbDate, fromDbDate, addDays, weekdayOf, weekStartOf, storeNow } from '../requests/dates.js'
 import { rulesToDays, type Day } from '../availability/days.js'
+import { queueScheduleEmails } from '../email/notify.js'
 
 const managerOnly = requireRole('STORE_MANAGER', 'ASSISTANT_STORE_MANAGER')
 
@@ -214,12 +215,18 @@ scheduleRouter.post('/weeks/:start/publish', managerOnly, async (req, res) => {
     return
   }
 
-  const updated = await prisma.week.update({
+    const updated = await prisma.week.update({
     where: { id: week.id },
     data: { published: snapshot, publishedAt: new Date(), version: { increment: 1 } },
   })
-  // Next step: email each person in changedStaffIds.
-  res.json({ version: updated.version, publishedAt: updated.publishedAt, changedStaffIds })
+  const emailed = await queueScheduleEmails({
+    weekStart: start!,
+    version: updated.version,
+    before: readSnapshot(week.published),
+    after: snapshot,
+    staffIds: changedStaffIds,
+  })
+  res.json({ version: updated.version, publishedAt: updated.publishedAt, changedStaffIds, emailed })
 })
 
 // ---- Staff: my published shifts ----

@@ -136,4 +136,23 @@ describe('publishing', () => {
     expect(second.body.version).toBe(2)
     expect((await mine(maya)).body.shifts[0].startMin).toBe(780)
   })
+    it('emails everyone on first publish, then only changed people', async () => {
+    const boss = await manager()
+    const maya = await createStaff()
+    const leo = await createStaff()
+    await putShift(boss, maya.id).expect(200)
+    await putShift(boss, leo.id).expect(200)
+
+    const first = await publish(boss).expect(200)
+    expect(first.body.emailed).toBe(2)
+    expect(await prisma.notification.count({ where: { template: 'schedule_published' } })).toBe(2)
+
+    await putShift(boss, maya.id, WEEK, 780, 1260).expect(200)
+    const second = await publish(boss).expect(200)
+    expect(second.body.emailed).toBe(1)
+
+    const update = await prisma.notification.findFirstOrThrow({ where: { template: 'schedule_updated' } })
+    expect(update.toEmail).toBe(maya.email)
+    expect(update.attachments).toHaveLength(1)
+  })
 })

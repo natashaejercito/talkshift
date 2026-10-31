@@ -4,6 +4,7 @@ import { DEFAULT_STORE_HOURS } from '../src/availability/storeHours.js'
 import { defaultStoreSettings } from '../src/requests/settings.js'
 
 export async function resetDb() {
+  await prisma.notification.deleteMany()
   await prisma.timeOffRequest.deleteMany()
   await prisma.availabilityChange.deleteMany()
   await prisma.availabilityRule.deleteMany()
