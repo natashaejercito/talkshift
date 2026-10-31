@@ -38,6 +38,7 @@ model Staff {
   decidedChanges      AvailabilityChange[] @relation("ChangeDecider")
   timeOffRequests TimeOffRequest[] @relation("RequestStaff")
   decidedRequests TimeOffRequest[] @relation("RequestDecider")
+  shifts Shift[]
 }
 
 enum AvailabilityStatus {
@@ -118,4 +119,31 @@ model TimeOffRequest {
   updatedAt   DateTime     @updatedAt
 
   @@index([staffId, status])
+}
+
+// One schedule week, starting on a Monday.
+model Week {
+  id          String    @id @default(cuid())
+  startDate   DateTime  @unique @db.Date
+  version     Int       @default(0) // goes up by one on every publish
+  publishedAt DateTime?
+  published   Json?     // snapshot of the shifts staff can see
+  shifts      Shift[]
+}
+
+model Shift {
+  id        String   @id @default(cuid())
+  week      Week     @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  weekId    String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staffId   String
+  date      DateTime @db.Date
+  startMin  Int
+  endMin    Int
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([staffId, date]) // one shift per person per day
+  @@index([weekId])
 }

@@ -10,6 +10,8 @@ export async function resetDb() {
   await prisma.staff.deleteMany()
   await prisma.storeHours.createMany({ data: DEFAULT_STORE_HOURS, skipDuplicates: true })
   await prisma.storeSettings.upsert({ where: { id: 1 }, update: {}, create: defaultStoreSettings() })
+  await prisma.shift.deleteMany()
+  await prisma.week.deleteMany()
 }
 
 export function bearer(claims: Record<string, unknown>) {
