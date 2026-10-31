@@ -7,7 +7,7 @@ import { weekSchema, checkStoreHours, rulesToDays } from './days.js'
 
 const managerOnly = requireRole('STORE_MANAGER', 'ASSISTANT_STORE_MANAGER')
 
-function changeJson(c: AvailabilityChange) {
+export function changeJson(c: AvailabilityChange) {
   return {
     id: c.id,
     days: c.days,

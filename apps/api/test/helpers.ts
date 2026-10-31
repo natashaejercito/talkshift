@@ -1,12 +1,15 @@
 import type { Role } from '../src/generated/prisma/client.js'
 import { prisma } from '../src/db.js'
 import { DEFAULT_STORE_HOURS } from '../src/availability/storeHours.js'
+import { defaultStoreSettings } from '../src/requests/settings.js'
 
 export async function resetDb() {
+  await prisma.timeOffRequest.deleteMany()
   await prisma.availabilityChange.deleteMany()
   await prisma.availabilityRule.deleteMany()
   await prisma.staff.deleteMany()
   await prisma.storeHours.createMany({ data: DEFAULT_STORE_HOURS, skipDuplicates: true })
+  await prisma.storeSettings.upsert({ where: { id: 1 }, update: {}, create: defaultStoreSettings() })
 }
 
 export function bearer(claims: Record<string, unknown>) {
