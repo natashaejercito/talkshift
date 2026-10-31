@@ -15,6 +15,7 @@ import { RequireManager } from './auth/RequireManager'
 import { ManagerLayout } from './layouts/ManagerLayout'
 import { ManagerSchedulePage } from './pages/manager/ManagerSchedulePage'
 import { StaffPage } from './pages/manager/StaffPage'
+import { InboxPage } from './pages/manager/InboxPage'
 
 const queryClient = new QueryClient()
 
@@ -44,6 +45,7 @@ createRoot(document.getElementById('root')!).render(
 
     <Route element={<RequireManager />}>
       <Route element={<ManagerLayout />}>
+        <Route path="/manager/inbox" element={<InboxPage />} />
         <Route path="/manager/schedule" element={<ManagerSchedulePage />} />
         <Route path="/manager/staff" element={<StaffPage />} />
       </Route>

@@ -1,15 +1,18 @@
 import { NavLink, Outlet } from 'react-router'
 import { useAuth0 } from '@auth0/auth0-react'
+import { useInbox } from '../features/requests/useRequests'
 
 const STORE_NAME = import.meta.env.VITE_STORE_NAME ?? 'Your store'
 
-const links = [
-  { to: '/manager/schedule', label: 'Schedule' },
-  { to: '/manager/staff', label: 'Staff' },
-]
-
 export function ManagerLayout() {
   const { logout } = useAuth0()
+  const { data: inbox } = useInbox()
+  const count = inbox?.items.length ?? 0
+  const links = [
+    { to: '/manager/inbox', label: 'Inbox', badge: count },
+    { to: '/manager/schedule', label: 'Schedule', badge: 0 },
+    { to: '/manager/staff', label: 'Staff', badge: 0 },
+  ]
   return (
     <div className="min-h-dvh">
       <header className="flex items-center gap-8 border-b border-line bg-surface px-8 py-4">
@@ -18,20 +21,23 @@ export function ManagerLayout() {
           <div className="text-xs text-muted">{STORE_NAME} · Manager</div>
         </div>
         <nav aria-label="Manager" className="flex gap-1">
-          {links.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              className={({ isActive }) =>
-                `rounded-[10px] px-4 py-2 text-sm font-medium ${
-                  isActive ? 'bg-brand-tint text-brand font-bold' : 'text-muted hover:bg-wash'
-                }`
-              }
-            >
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
+  {links.map((l) => (
+    <NavLink
+      key={l.to}
+      to={l.to}
+      className={({ isActive }) =>
+        `flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-medium ${
+          isActive ? 'bg-brand-tint text-brand font-bold' : 'text-muted hover:bg-wash'
+        }`
+      }
+    >
+      {l.label}
+      {l.badge > 0 && (
+        <span className="rounded-full bg-alert px-2 text-xs font-bold text-white">{l.badge}</span>
+      )}
+    </NavLink>
+  ))}
+</nav>
         <button
           type="button"
           onClick={() => logout({ logoutParams: { returnTo: `${window.location.origin}/login` } })}
