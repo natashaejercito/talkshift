@@ -6,6 +6,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "tsx src/index.ts",
+    "postinstall": "prisma generate",
     "test": "vitest",
     "test:run": "vitest run",
     "db:deploy": "prisma migrate deploy",
