@@ -15,6 +15,7 @@ app.use(helmet())
 app.use(cors({ origin: 'http://localhost:5173' }))
 app.use(express.json())
 
+app.set('trust proxy', 2) // Vercel → Render → us, so req.ip is the real visitor
 
 
 app.get('/api/health', (_req, res) => {

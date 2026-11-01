@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useInbox, useDecide, describeRequest, KIND_LABEL, type InboxItem } from '../../features/requests/useRequests'
 import { LatePill } from '../../features/requests/StatusPill'
 import { describeDay, DAY_SHORT } from '../../features/availability/useAvailability'
+import { useCoverList } from '../../features/cover/useCover'
+import { CoverCard } from '../../features/cover/CoverCard'
 
 function availabilityDiff(item: Extract<InboxItem, { type: 'AVAILABILITY' }>) {
   return item.change.days
@@ -93,6 +95,7 @@ function InboxCard({ item }: { item: InboxItem }) {
 }
 
 export function InboxPage() {
+  const { data: cover } = useCoverList()
   const { data, isLoading, error } = useInbox()
   if (isLoading) return <p className="text-muted">Loading…</p>
   if (error || !data) return <p className="text-alert">Couldn't load the inbox.</p>
@@ -105,6 +108,16 @@ export function InboxPage() {
           {data.items.length ? `${data.items.length} to review` : 'All caught up.'}
         </p>
       </div>
+      {cover && cover.items.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display text-xl font-extrabold">Needs cover</h2>
+          <ul className="flex flex-col gap-2">
+            {cover.items.map((item) => (
+              <CoverCard key={item.id} item={item} />
+            ))}
+          </ul>
+        </section>
+      )}
       <ul className="flex flex-col gap-2">
         {data.items.map((item) => (
           <InboxCard

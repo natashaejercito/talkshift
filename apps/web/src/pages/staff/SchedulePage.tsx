@@ -3,6 +3,8 @@ import { useMe } from '../../auth/useMe'
 import { useMySchedule, hoursOf } from '../../features/schedule/useSchedule'
 import { formatTime } from '../../features/availability/useAvailability'
 import { addDays, weekStartOf, todayLocal, formatDate, formatWeek, formatHours } from '../../lib/dates'
+import { OpenShifts } from '../../features/cover/OpenShifts'
+import { ShiftCoverActions } from '../../features/cover/ShiftCoverActions'
 
 export function SchedulePage() {
   const { data: me } = useMe()
@@ -36,6 +38,7 @@ export function SchedulePage() {
           </button>
         ))}
       </div>
+      <OpenShifts />
 
       {isLoading && <p className="text-muted">Loading…</p>}
       {error && <p className="text-alert">Couldn't load your schedule.</p>}
@@ -64,9 +67,9 @@ export function SchedulePage() {
 
           <ul className="flex flex-col gap-2">
             {data.shifts.map((s) => (
-              <li
+              <li 
                 key={s.date}
-                className={`flex items-center gap-4 rounded-[var(--radius-card)] border p-4 ${
+                  className={`flex flex-wrap items-center gap-4 rounded-[var(--radius-card)] border p-4 ${
                   s.date === today ? 'border-brand bg-brand-tint' : 'border-line bg-surface'
                 }`}
               >
@@ -77,6 +80,7 @@ export function SchedulePage() {
                   <div className="font-display text-2xl font-extrabold">{formatDate(s.date, { day: 'numeric' })}</div>
                 </div>
                 <div className="flex-1">
+                    <ShiftCoverActions date={s.date} />
                   <div className="font-bold">
                     {formatTime(s.startMin)} – {formatTime(s.endMin)}
                   </div>

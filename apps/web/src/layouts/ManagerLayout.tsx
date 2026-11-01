@@ -1,13 +1,15 @@
 import { NavLink, Outlet } from 'react-router'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useInbox } from '../features/requests/useRequests'
+import { useCoverList } from '../features/cover/useCover'
 
 const STORE_NAME = import.meta.env.VITE_STORE_NAME ?? 'Your store'
 
 export function ManagerLayout() {
   const { logout } = useAuth0()
   const { data: inbox } = useInbox()
-  const count = inbox?.items.length ?? 0
+  const { data: cover } = useCoverList()
+ const count = (inbox?.items.length ?? 0) + (cover?.items.length ?? 0)
   const links = [
     { to: '/manager/inbox', label: 'Inbox', badge: count },
     { to: '/manager/schedule', label: 'Schedule', badge: 0 },
